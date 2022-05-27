@@ -10,8 +10,9 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
-from dollarstreet.utils import pil_loader
 import dollarstreet.constants as c
+from dollarstreet.transforms import train_transform, val_transform
+from dollarstreet.utils import pil_loader
 
 
 class CSVDataset(Dataset):
@@ -88,4 +89,11 @@ def get_csv_dataset(
     Returns:
         Dataset: CSVDataset for given file.
     """
-    pass
+    transform = train_transform if train else val_transform
+    return CSVDataset(
+        csv_file=csv_file,
+        path_col=path_col,
+        target_col=target_col,
+        root_dir=root_dir,
+        transform=transform
+    )
