@@ -24,7 +24,7 @@ class CSVDataset(Dataset):
             path_col: str,
             target_col: str,
             root_dir: str,
-            transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
+            transform: Optional[Callable] = None,
             explode: bool = False):
         """
         Args:
