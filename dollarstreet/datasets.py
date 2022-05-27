@@ -10,8 +10,8 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
-from utils import pil_loader
-import constants as c
+from dollarstreet.utils import pil_loader
+import dollarstreet.constants as c
 
 
 class CSVDataset(Dataset):

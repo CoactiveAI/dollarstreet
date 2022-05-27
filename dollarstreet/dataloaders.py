@@ -2,7 +2,7 @@ from typing import Optional
 
 from torch.utils.data import Dataset, DataLoader
 
-import constants as c
+import dollarstreet.constants as c
 
 
 def get_loader(
