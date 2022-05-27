@@ -11,6 +11,7 @@ import torch
 from torch.utils.data import Dataset
 
 from utils import pil_loader
+import constants as c
 
 
 class CSVDataset(Dataset):
@@ -34,7 +35,7 @@ class CSVDataset(Dataset):
             transform (callable, optional): Optional transform to be applied
               on a sample.
             explode (bool, optional): Optional option to explode target_col
-              into separate rows
+              into separate rows.
         """
         self.csv_df = pd.read_csv(csv_file)
         self.path_col = path_col
@@ -66,3 +67,25 @@ class CSVDataset(Dataset):
 
         target = self.csv_df.iloc[idx][self.target_col]
         return image, torch.tensor(target)
+
+
+def get_csv_dataset(
+    csv_file: str,
+    root_dir: str,
+    train: Optional[bool] = False,
+    path_col: Optional[str] = c.PATH_COL,
+    target_col: Optional[str] = c.TARGET_COL,
+) -> Dataset:
+    """Return pytorch dataset for Dollar Street csv.
+
+    Args:
+        csv_file (str): Path to the csv file.
+        root_dir (str): Directory with all the images.
+        train (Optional[bool], optional): Train flag (i.e. train or val).
+        path_col (Optional[str], optional): Column name for relative paths.
+        target_col (Optional[str, optional): Column name with targets.
+
+    Returns:
+        Dataset: CSVDataset for given file.
+    """
+    pass
