@@ -35,7 +35,7 @@ class CSVDataset(Dataset):
             root_dir (string): Directory with all the images.
             transform (Optional[Callable, optional]): Optional transform
                 to be applied on a sample.
-            explode (Optional[str, optional]): Optional option to explode 
+            explode (Optional[str, optional]): Optional option to explode
                 target_col into separate rows.
         """
         self.csv_df = pd.read_csv(csv_file)
@@ -86,7 +86,7 @@ def get_csv_dataset(
         train (Optional[bool], optional): Train flag (i.e. train or val).
         path_col (Optional[str], optional): Column name for relative paths.
         target_col (Optional[str, optional): Column name with targets.
-        explode (Optional[str, optional]): Optional option to explode 
+        explode (Optional[str, optional]): Optional option to explode
             target_col into separate rows.
 
     Returns:
