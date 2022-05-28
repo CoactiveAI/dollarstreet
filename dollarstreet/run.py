@@ -2,16 +2,9 @@ import time
 import copy
 
 import torch
-import torch.backends.cudnn as cudnn
 
+from dollarstreet import device
 from dollarstreet.utils import AverageMeter
-
-
-if torch.cuda.is_available():
-    device = torch.device('cuda:0')
-    cudnn.benchmark = True
-else:
-    device = torch.device('cpu')
 
 
 def _accuracy(output, target, topk=(1,)):

@@ -3,6 +3,7 @@ from typing import Optional
 from torch.nn import Module
 from torchvision import models
 
+from dollarstreet import device
 import dollarstreet.constants as c
 
 
@@ -17,7 +18,6 @@ def get_model(
     Returns:
         Module: Pytorch model.
     """
-    model = None
     assert model_name in c.VALID_MODELS, f'{model_name}: Invalid model name'
 
     if model_name == "resnet":
@@ -29,4 +29,5 @@ def get_model(
     elif model_name == "densenet":
         model = models.densenet121(pretrained=use_pretrained)
 
+    model = model.to(device)
     return model

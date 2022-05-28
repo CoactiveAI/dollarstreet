@@ -3,7 +3,6 @@ from collections.abc import Callable
 import os
 from typing import Optional, Tuple
 
-
 import pandas as pd
 from pandas.api.types import is_string_dtype
 from PIL import Image
