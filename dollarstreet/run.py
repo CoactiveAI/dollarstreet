@@ -2,8 +2,11 @@ import time
 import copy
 
 import torch
+import torch.nn as nn
 
 from dollarstreet import device
+import dollarstreet.constants as c
+from dollarstreet.models import get_model
 from dollarstreet.utils import AverageMeter
 
 
@@ -23,13 +26,28 @@ def _accuracy(output, target, topk=(1,)):
     return res
 
 
-def _run_epochs(model, dataloaders, criterion, optimizer, num_epochs, train):
-    phases = ['train', 'val'] if train else ['val']
+def _run_epochs(model_names, dataloaders, num_epochs, train):
 
-    top1_history = []
-    top5_history = []
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_top1 = 0.0
+    # Initialize pytorch objects
+    models = {name: get_model(name) for name in model_names}
+    optimizers = {
+        name: torch.optim.SGD(
+            models[name].parameters(),
+            c.LR,
+            c.MOMENTUM,
+            weight_decay=c.WEIGHT_DECAY)
+        for name in model_names
+    }
+    criterions = {name: nn.CrossEntropyLoss() for name in model_names}
+
+    # Initialize data stores
+    top1_history = {name: [] for name in model_names}
+    top5_history = {name: [] for name in model_names}
+    best_model_wts = {
+        name: copy.deepcopy(models[name].state_dict())
+        for name in model_names
+    }
+    best_top1 = {name: 0.0 for name in model_names}
 
     # Iterate over epochs
     since = time.time()
@@ -38,69 +56,83 @@ def _run_epochs(model, dataloaders, criterion, optimizer, num_epochs, train):
         print('-' * 10)
 
         # Initialize counters
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+        losses = {name: AverageMeter() for name in model_names}
+        top1 = {name: AverageMeter() for name in model_names}
+        top5 = {name: AverageMeter() for name in model_names}
 
         # Iterate through training and validation phase
+        phases = ['train', 'val'] if train else ['val']
         for phase in phases:
             dataloader = dataloaders[phase]
 
             if phase == 'train':
-                model.train()
+                for name, model in models.items():
+                    models[name] = model.train()
             else:
-                model.eval()
+                for name, model in models.items():
+                    models[name] = model.eval()
 
             # Iterate over data
             for inputs, labels in dataloader:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                optimizer.zero_grad()
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
+                for name in model_names:
+                    optimizers[name].zero_grad()
+                    with torch.set_grad_enabled(phase == 'train'):
+                        outputs = models[name](inputs)
+                        loss = criterions[name](outputs, labels)
 
-                    prec1, prec5 = _accuracy(outputs.data, labels, topk=(1, 5))
-                    losses.update(loss.data.item(), inputs.size(0))
-                    top1.update(prec1[0], inputs.size(0))
-                    top5.update(prec5[0], inputs.size(0))
+                        prec1, prec5 = _accuracy(
+                            outputs.data, labels, topk=(1, 5))
+                        losses[name].update(loss.data.item(), inputs.size(0))
+                        top1[name].update(prec1[0], inputs.size(0))
+                        top5[name].update(prec5[0], inputs.size(0))
 
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
+                        if phase == 'train':
+                            loss.backward()
+                            optimizers[name].step()
 
-            print(
-                f'({phase}) Loss: {losses.avg:.4f} prec@1: {top1.avg:.4f} prec@5: {top5.avg:.4f}')
+            for name in models:
+                print(
+                    f'({name},{phase}) '
+                    f'Loss: {losses[name].avg:.4f} '
+                    f'prec@1: {top1[name].avg:.4f} '
+                    f'prec@5: {top5[name].avg:.4f}\n'
+                )
 
-            # Save model if it has better performance
-            if phase == 'val' and top1.avg > best_top1:
-                best_top1 = top1.avg
-                best_model_wts = copy.deepcopy(model.state_dict())
+                # Save model if it has better performance
+                if phase == 'val' and top1[name].avg > best_top1[name]:
+                    best_top1[name] = top1[name].avg
+                    best_model_wts[name] = copy.deepcopy(
+                        models[name].state_dict())
 
-            # Save epoch stats
-            if phase == 'val':
-                top1_history.append(top1.avg)
-                top5_history.append(top5.avg)
+                # Save epoch stats
+                if phase == 'val':
+                    top1_history[name].append(top1[name].avg)
+                    top5_history[name].append(top5[name].avg)
 
         print()
 
     time_elapsed = time.time() - since
     print(
         f'Complete in {(time_elapsed // 60):.0f}m {(time_elapsed % 60):.0f}s')
-    print(f'Best prec@1: {best_top1:4f}')
+    print('Best prec@1:')
 
-    # load best model weights
-    model.load_state_dict(best_model_wts)
+    for name in model_names:
+        print(f'({name}) {best_top1[name]:4f}')
 
-    return model, top1_history, top5_history
+        # load best model weights
+        models[name].load_state_dict(best_model_wts[name])
+
+    return models, top1_history, top5_history
 
 
-def train_model(model, dataloaders, criterion, optimizer, num_epochs):
+def train_model(model_names, dataloaders, num_epochs):
     return _run_epochs(
-        model, dataloaders, criterion, optimizer, num_epochs, True)
+        model_names, dataloaders, num_epochs, True)
 
 
-def validate_model(model, dataloaders, criterion, optimizer):
+def validate_model(model_names, dataloaders):
     return _run_epochs(
-        model, dataloaders, criterion, optimizer, 1, False)
+        model_names, dataloaders, 1, False)
