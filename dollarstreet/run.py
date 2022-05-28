@@ -98,7 +98,7 @@ def _run_epochs(model_names, dataloaders, num_epochs, train):
                     f'({name},{phase}) '
                     f'Loss: {losses[name].avg:.4f} '
                     f'prec@1: {top1[name].avg:.4f} '
-                    f'prec@5: {top5[name].avg:.4f}\n'
+                    f'prec@5: {top5[name].avg:.4f}'
                 )
 
                 # Save model if it has better performance
