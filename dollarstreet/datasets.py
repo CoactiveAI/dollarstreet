@@ -26,17 +26,17 @@ class CSVDataset(Dataset):
             target_col: str,
             root_dir: str,
             transform: Optional[Callable] = None,
-            explode: bool = False):
+            explode: Optional[bool] = False):
         """
         Args:
             csv_file (string): Path to the csv file.
             path_col (string): Column name for relative paths.
             target_col (string): Column name with targets.
             root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-              on a sample.
-            explode (bool, optional): Optional option to explode target_col
-              into separate rows.
+            transform (Optional[Callable, optional]): Optional transform
+                to be applied on a sample.
+            explode (Optional[str, optional]): Optional option to explode 
+                target_col into separate rows.
         """
         self.csv_df = pd.read_csv(csv_file)
         self.path_col = path_col
@@ -76,6 +76,7 @@ def get_csv_dataset(
     train: Optional[bool] = False,
     path_col: Optional[str] = c.PATH_COL,
     target_col: Optional[str] = c.TARGET_COL,
+    explode: Optional[bool] = False,
 ) -> Dataset:
     """Return pytorch dataset for Dollar Street csv.
 
@@ -85,6 +86,8 @@ def get_csv_dataset(
         train (Optional[bool], optional): Train flag (i.e. train or val).
         path_col (Optional[str], optional): Column name for relative paths.
         target_col (Optional[str, optional): Column name with targets.
+        explode (Optional[str, optional]): Optional option to explode 
+            target_col into separate rows.
 
     Returns:
         Dataset: CSVDataset for given file.
@@ -95,5 +98,6 @@ def get_csv_dataset(
         path_col=path_col,
         target_col=target_col,
         root_dir=root_dir,
-        transform=transform
+        transform=transform,
+        explode=explode,
     )
