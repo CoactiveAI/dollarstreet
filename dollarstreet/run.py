@@ -13,7 +13,8 @@ from dollarstreet.utils import AverageMeter
 
 
 def _accuracy(output, target, topk=(1,)) -> List[torch.Tensor]:
-    """Computes the precision@k for the specified values of k"""
+    """Computes the precision@k for the specified values of k.
+    """
     maxk = max(topk)
     batch_size = target.size(0)
 
@@ -33,6 +34,8 @@ def _run_epochs(
         dataloaders,
         num_epochs,
         train) -> Tuple[dict, dict, dict]:
+    """Performs training and/or validation. Returns best model and scores.
+    """
 
     # Initialize pytorch objects
     models = {name: get_model(name) for name in model_names}

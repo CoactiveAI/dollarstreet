@@ -29,5 +29,19 @@ def get_model(
     elif model_name == "densenet":
         model = models.densenet121(pretrained=use_pretrained)
 
+    elif model_name == "mobilenet":
+        model = models.mobilenet_v2(pretrained=use_pretrained)
+
+    elif model_name == "efficientnet":
+        model = models.efficientnet_b0(pretrained=use_pretrained)
+
+    elif model_name == "shufflenet":
+        model = models.shufflenet_v2_x1_0(pretrained=use_pretrained)
+
+    elif model_name == "visionnet":
+        model = models.vit_b_16(pretrained=use_pretrained)
+
+    # TODO: Add to constants.py the valid ones
+
     model = model.to(device)
     return model
