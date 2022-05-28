@@ -1,8 +1,10 @@
-import time
 import copy
+import time
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
 
 from dollarstreet import device
 import dollarstreet.constants as c
@@ -10,7 +12,7 @@ from dollarstreet.models import get_model
 from dollarstreet.utils import AverageMeter
 
 
-def _accuracy(output, target, topk=(1,)):
+def _accuracy(output, target, topk=(1,)) -> List[torch.Tensor]:
     """Computes the precision@k for the specified values of k"""
     maxk = max(topk)
     batch_size = target.size(0)
@@ -26,7 +28,11 @@ def _accuracy(output, target, topk=(1,)):
     return res
 
 
-def _run_epochs(model_names, dataloaders, num_epochs, train):
+def _run_epochs(
+        model_names,
+        dataloaders,
+        num_epochs,
+        train) -> Tuple[dict, dict, dict]:
 
     # Initialize pytorch objects
     models = {name: get_model(name) for name in model_names}
@@ -128,11 +134,39 @@ def _run_epochs(model_names, dataloaders, num_epochs, train):
     return models, top1_history, top5_history
 
 
-def train_model(model_names, dataloaders, num_epochs):
+def train_model(
+        model_names: List[str],
+        dataloaders: Dict[str, DataLoader],
+        num_epochs: int) -> Tuple[dict, dict, dict]:
+    """Trains models. Return models and scores.
+
+    Args:
+        model_names (List[str]): List of valid model names.
+        dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
+            for train and val phases.
+        num_epochs (int): Number of epochs for training.
+
+    Returns:
+        Tuple[dict, dict, dict]: models, top1 scores, top5 scores
+    """
+
     return _run_epochs(
         model_names, dataloaders, num_epochs, True)
 
 
-def validate_model(model_names, dataloaders):
+def validate_model(
+        model_names: List[str],
+        dataloaders: Dict[str, DataLoader]) -> Tuple[dict, dict, dict]:
+    """Validates models. Return models and scores.
+
+    Args:
+        model_names (List[str]): List of valid model names.
+        dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
+            for train and val phases.
+
+    Returns:
+        Tuple[dict, dict, dict]: models, top1 scores, top5 scores
+    """
+
     return _run_epochs(
         model_names, dataloaders, 1, False)
