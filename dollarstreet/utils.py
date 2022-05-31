@@ -37,7 +37,7 @@ def pil_loader(path: str) -> Image.Image:
 
 
 def log(
-    _func: Callable = None, 
+    _func: Callable = None,
     *,
     logger: Optional[logging.Logger] = None,
     log_input: Optional[bool] = True,

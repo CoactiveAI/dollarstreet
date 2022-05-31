@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
+from torch.nn import Module
 from torch.utils.data import DataLoader
 
 from dollarstreet import device
@@ -39,7 +40,7 @@ def _run_epochs(
         dataloaders,
         num_epochs,
         train) -> Tuple[dict, dict, dict]:
-    """Performs training and/or validation. Returns best model and scores.
+    """Performs training and/or validation. Returns best models and scores.
     """
 
     # Initialize pytorch objects
@@ -140,8 +141,101 @@ def _run_epochs(
     return models, top1_history, top5_history
 
 
+def _run_epoch(
+        model,
+        dataloaders,
+        num_epochs,
+        train) -> Tuple[Module, list, list]:
+    """Performs training and/or validation. Returns best model and scores.
+    """
+
+    # Initialize pytorch objects
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        c.LR,
+        c.MOMENTUM,
+        weight_decay=c.WEIGHT_DECAY)
+    criterion = nn.CrossEntropyLoss()
+
+    # Initialize data stores
+    top1_history = []
+    top5_history = []
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_top1 = 0.0
+
+    # Iterate over epochs
+    since = time.time()
+    for epoch in range(num_epochs):
+        logger.info(f'Epoch {epoch + 1}/{num_epochs}')
+        logger.info('-' * 10)
+
+        # Initialize counters
+        losses = AverageMeter()
+        top1 = AverageMeter()
+        top5 = AverageMeter()
+
+        # Iterate through training and validation phase
+        phases = ['train', 'val'] if train else ['val']
+        for phase in phases:
+            dataloader = dataloaders[phase]
+
+            if phase == 'train':
+                model = model.train()
+            else:
+                models = model.eval()
+
+            # Iterate over data
+            for inputs, labels in dataloader:
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                optimizer.zero_grad()
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
+
+                    prec1, prec5 = _accuracy(
+                        outputs.data, labels, topk=(1, 5))
+                    losses.update(loss.data.item(), inputs.size(0))
+                    top1.update(prec1[0], inputs.size(0))
+                    top5.update(prec5[0], inputs.size(0))
+
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+            for name in models:
+                logger.info(
+                    f'({name},{phase}) '
+                    f'Loss: {losses.avg:.4f} '
+                    f'prec@1: {top1.avg:.4f} '
+                    f'prec@5: {top5.avg:.4f}'
+                )
+
+                # Save model if it has better performance
+                if phase == 'val' and top1.avg > best_top1:
+                    best_top1 = top1.avg
+                    best_model_wts = copy.deepcopy(
+                        models.state_dict())
+
+                # Save epoch stats
+                if phase == 'val':
+                    top1_history.append(top1.avg)
+                    top5_history.append(top5.avg)
+
+    time_elapsed = time.time() - since
+    logger.info(
+        f'Complete in {(time_elapsed // 60):.0f}m {(time_elapsed % 60):.0f}s')
+    logger.info(f'Best prec@1: {best_top1:4f}')
+
+    # load best model weights
+    model.load_state_dict(best_model_wts)
+
+    return model, top1_history, top5_history
+
+
 @log(logger=logger, log_output=False)
-def train_model(
+def train_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
         num_epochs: int,
@@ -165,7 +259,7 @@ def train_model(
 
 
 @log(logger=logger, log_output=False)
-def validate_model(
+def validate_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
         save_log: Optional[bool] = False) -> Tuple[dict, dict, dict]:
@@ -184,3 +278,30 @@ def validate_model(
 
     return _run_epochs(
         model_names, dataloaders, 1, False)
+
+
+@log(logger=logger, log_output=False)
+def validate_model(
+        dataloaders: Dict[str, DataLoader],
+        model: Optional[Module] = None,
+        model_name: Optional[str] = None,
+        save_log: Optional[bool] = False) -> Tuple[Module, list, list]:
+    """Validates a single model. Return scores.
+
+    Args:
+        dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
+            for train and val phases.
+        model (optiomal, Module): Torch model.
+        model_name (optional, str): Valid model name.
+        save_log(optional, bool): Flag for log decorator. When true, logs
+            are saved to disk.
+
+    Returns:
+        Tuple[Module, list, list]: model, top1 scores, top5 scores
+    """
+
+    # If no model is provided, load model
+    if model is None:
+        model = get_model(model_name)
+
+    return _run_epoch(model, dataloaders, 1, False)
