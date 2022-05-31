@@ -37,7 +37,11 @@ def pil_loader(path: str) -> Image.Image:
 
 
 def log(
-    _func: Callable = None, *, logger: Optional[logging.Logger] = None
+    _func: Callable = None, 
+    *,
+    logger: Optional[logging.Logger] = None,
+    log_input: Optional[bool] = True,
+    log_output: Optional[bool] = True,
 ) -> Callable:
     """Decorator function. Initialized Logger can be provided. Decorated
         functions should use save_log:bool flag to indicate whether results
@@ -73,8 +77,9 @@ def log(
 
             # Log function, args and start time
             logger.info(f'Function: {func.__name__}')
-            logger.info(f'args: {args}')
-            logger.info(f'kwargs {kwargs}\n')
+            if log_input:
+                logger.info(f'args: {args}')
+                logger.info(f'kwargs {kwargs}\n')
             logger.info(f'---------- Run at {start_dt}\n')
 
             # Try to run. Log if error is thrown
@@ -83,9 +88,10 @@ def log(
                 output = func(*args, **kwargs)
 
                 # Log outut
-                end_dt = datetime.now()
-                logger.info('---------- Output')
-                logger.info(f'{output}')
+                if log_output:
+                    end_dt = datetime.now()
+                    logger.info('---------- Output')
+                    logger.info(f'{output}')
 
                 # Log end time
                 end_dt = datetime.now()

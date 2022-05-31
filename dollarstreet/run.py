@@ -140,7 +140,7 @@ def _run_epochs(
     return models, top1_history, top5_history
 
 
-@log(logger=logger)
+@log(logger=logger, log_output=False)
 def train_model(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
@@ -164,7 +164,7 @@ def train_model(
         model_names, dataloaders, num_epochs, True)
 
 
-@log(logger=logger)
+@log(logger=logger, log_output=False)
 def validate_model(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
