@@ -238,7 +238,8 @@ def train_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
         num_epochs: int,
-        save_log: Optional[bool] = False) -> Tuple[dict, dict, dict]:
+        save_log: Optional[bool] = False,
+        description: Optional[str] = None) -> Tuple[dict, dict, dict]:
     """Trains models. Return models and scores.
 
     Args:
@@ -246,8 +247,9 @@ def train_models(
         dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
             for train and val phases.
         num_epochs (int): Number of epochs for training.
-        save_log(optional, bool): Flag for log decorator. When true, logs
+        save_log (optional, bool): Flag for log decorator. When true, logs
             are saved to disk.
+        description (optional, str): Description for logging.
 
     Returns:
         Tuple[dict, dict, dict]: models, top1 scores, top5 scores
@@ -261,15 +263,17 @@ def train_models(
 def validate_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
-        save_log: Optional[bool] = False) -> Tuple[dict, dict, dict]:
+        save_log: Optional[bool] = False,
+        description: Optional[str] = None) -> Tuple[dict, dict, dict]:
     """Validates models. Return models and scores.
 
     Args:
         model_names (List[str]): List of valid model names.
         dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
             for train and val phases.
-        save_log(optional, bool): Flag for log decorator. When true, logs
+        save_log (optional, bool): Flag for log decorator. When true, logs
             are saved to disk.
+        description (optional, str): Description for logging.
 
     Returns:
         Tuple[dict, dict, dict]: models, top1 scores, top5 scores
@@ -284,7 +288,8 @@ def validate_model(
         dataloaders: Dict[str, DataLoader],
         model: Optional[Module] = None,
         model_name: Optional[str] = None,
-        save_log: Optional[bool] = False) -> Tuple[Module, list, list]:
+        save_log: Optional[bool] = False,
+        description: Optional[str] = None) -> Tuple[Module, list, list]:
     """Validates a single model. Return scores.
 
     Args:
@@ -292,8 +297,9 @@ def validate_model(
             for train and val phases.
         model (optiomal, Module): Torch model.
         model_name (optional, str): Valid model name.
-        save_log(optional, bool): Flag for log decorator. When true, logs
+        save_log (optional, bool): Flag for log decorator. When true, logs
             are saved to disk.
+        description (optional, str): Description for logging.
 
     Returns:
         Tuple[Module, list, list]: model, top1 scores, top5 scores

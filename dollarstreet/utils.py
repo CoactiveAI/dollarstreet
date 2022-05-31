@@ -77,6 +77,9 @@ def log(
 
             # Log function, args and start time
             logger.info(f'Function: {func.__name__}')
+            description = kwargs.get('description', None)
+            if description:
+                logger.info(f'Description: {description}')
             if log_input:
                 logger.info(f'args: {args}')
                 logger.info(f'kwargs {kwargs}\n')
