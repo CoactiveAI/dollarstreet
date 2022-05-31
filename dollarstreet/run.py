@@ -204,24 +204,23 @@ def _run_epoch(
                         loss.backward()
                         optimizer.step()
 
-            for name in models:
-                logger.info(
-                    f'({name},{phase}) '
-                    f'Loss: {losses.avg:.4f} '
-                    f'prec@1: {top1.avg:.4f} '
-                    f'prec@5: {top5.avg:.4f}'
-                )
+            logger.info(
+                f'({name},{phase}) '
+                f'Loss: {losses.avg:.4f} '
+                f'prec@1: {top1.avg:.4f} '
+                f'prec@5: {top5.avg:.4f}'
+            )
 
-                # Save model if it has better performance
-                if phase == 'val' and top1.avg > best_top1:
-                    best_top1 = top1.avg
-                    best_model_wts = copy.deepcopy(
-                        models.state_dict())
+            # Save model if it has better performance
+            if phase == 'val' and top1.avg > best_top1:
+                best_top1 = top1.avg
+                best_model_wts = copy.deepcopy(
+                    models.state_dict())
 
-                # Save epoch stats
-                if phase == 'val':
-                    top1_history.append(top1.avg)
-                    top5_history.append(top5.avg)
+            # Save epoch stats
+            if phase == 'val':
+                top1_history.append(top1.avg)
+                top5_history.append(top5.avg)
 
     time_elapsed = time.time() - since
     logger.info(
