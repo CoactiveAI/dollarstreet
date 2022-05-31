@@ -66,8 +66,8 @@ def _run_epochs(
     # Iterate over epochs
     since = time.time()
     for epoch in range(num_epochs):
-        print(f'Epoch {epoch + 1}/{num_epochs}')
-        print('-' * 10)
+        logger.info(f'Epoch {epoch + 1}/{num_epochs}')
+        logger.info('-' * 10)
 
         # Initialize counters
         losses = {name: AverageMeter() for name in model_names}
@@ -108,7 +108,7 @@ def _run_epochs(
                             optimizers[name].step()
 
             for name in models:
-                print(
+                logger.info(
                     f'({name},{phase}) '
                     f'Loss: {losses[name].avg:.4f} '
                     f'prec@1: {top1[name].avg:.4f} '
@@ -126,15 +126,13 @@ def _run_epochs(
                     top1_history[name].append(top1[name].avg)
                     top5_history[name].append(top5[name].avg)
 
-        print()
-
     time_elapsed = time.time() - since
-    print(
+    logger.info(
         f'Complete in {(time_elapsed // 60):.0f}m {(time_elapsed % 60):.0f}s')
-    print('Best prec@1:')
+    logger.info('Best prec@1:')
 
     for name in model_names:
-        print(f'({name}) {best_top1[name]:4f}')
+        logger.info(f'({name}) {best_top1[name]:4f}')
 
         # load best model weights
         models[name].load_state_dict(best_model_wts[name])
