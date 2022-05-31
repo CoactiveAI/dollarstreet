@@ -1,6 +1,7 @@
 import copy
+import logging
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -9,7 +10,11 @@ from torch.utils.data import DataLoader
 from dollarstreet import device
 import dollarstreet.constants as c
 from dollarstreet.models import get_model
-from dollarstreet.utils import AverageMeter
+from dollarstreet.utils import AverageMeter, log
+
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def _accuracy(output, target, topk=(1,)) -> List[torch.Tensor]:
@@ -137,10 +142,12 @@ def _run_epochs(
     return models, top1_history, top5_history
 
 
+@log(logger=logger)
 def train_model(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
-        num_epochs: int) -> Tuple[dict, dict, dict]:
+        num_epochs: int,
+        save_log: Optional[bool] = False) -> Tuple[dict, dict, dict]:
     """Trains models. Return models and scores.
 
     Args:
@@ -148,6 +155,8 @@ def train_model(
         dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
             for train and val phases.
         num_epochs (int): Number of epochs for training.
+        save_log(optional, bool): Flag for log decorator. When true, logs
+            are saved to disk.
 
     Returns:
         Tuple[dict, dict, dict]: models, top1 scores, top5 scores
@@ -157,15 +166,19 @@ def train_model(
         model_names, dataloaders, num_epochs, True)
 
 
+@log(logger=logger)
 def validate_model(
         model_names: List[str],
-        dataloaders: Dict[str, DataLoader]) -> Tuple[dict, dict, dict]:
+        dataloaders: Dict[str, DataLoader],
+        save_log: Optional[bool] = False) -> Tuple[dict, dict, dict]:
     """Validates models. Return models and scores.
 
     Args:
         model_names (List[str]): List of valid model names.
         dataloaders (Dict[str, DataLoader]): Dictionary of dataloaders
             for train and val phases.
+        save_log(optional, bool): Flag for log decorator. When true, logs
+            are saved to disk.
 
     Returns:
         Tuple[dict, dict, dict]: models, top1 scores, top5 scores
