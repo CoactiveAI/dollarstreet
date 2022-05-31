@@ -205,7 +205,7 @@ def _run_epoch(
                         optimizer.step()
 
             logger.info(
-                f'({name},{phase}) '
+                f'({phase}) '
                 f'Loss: {losses.avg:.4f} '
                 f'prec@1: {top1.avg:.4f} '
                 f'prec@5: {top5.avg:.4f}'
