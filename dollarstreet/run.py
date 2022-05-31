@@ -304,4 +304,5 @@ def validate_model(
     if model is None:
         model = get_model(model_name)
 
-    return _run_epoch(model, dataloaders, 1, False)
+    return _run_epoch(
+        model=model, dataloaders=dataloaders, num_epochs=1, train=False)
