@@ -17,6 +17,18 @@ from dollarstreet.utils import AverageMeter, log
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def seed_everything(seed: int):
+    import random, os
+    import numpy as np
+    #import torch
+    
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 def _accuracy(output, target, topk=(1,)) -> List[torch.Tensor]:
     """Computes the precision@k for the specified values of k.
@@ -39,10 +51,12 @@ def _run_epochs(
         model_names,
         dataloaders,
         num_epochs,
-        train) -> Tuple[dict, dict, dict]:
+        seed,
+        train) -> Tuple[list, dict, int, int, bool]:
     """Performs training and/or validation. Returns best models and scores.
     """
 
+    seed_everything(seed=seed)
     # Initialize pytorch objects
     models = {name: get_model(name) for name in model_names}
     optimizers = {
@@ -145,10 +159,12 @@ def _run_epoch(
         model,
         dataloaders,
         num_epochs,
+        seed,
         train) -> Tuple[Module, list, list]:
-    """Performs training and/or validation. Returns best model and scores.
+    """Performs training and/or validation. Returns best models and scores.
     """
-
+    
+    seed_everything(seed=seed)
     # Initialize pytorch objects
     optimizer = torch.optim.SGD(
         model.parameters(),
@@ -238,8 +254,9 @@ def train_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
         num_epochs: int,
+        seed: int,
         save_log: Optional[bool] = False,
-        description: Optional[str] = None) -> Tuple[dict, dict, dict]:
+        description: Optional[str] = None) -> Tuple[list, dict, int, int, bool, str]:
     """Trains models. Return models and scores.
 
     Args:
@@ -256,13 +273,14 @@ def train_models(
     """
 
     return _run_epochs(
-        model_names, dataloaders, num_epochs, True)
+        model_names, dataloaders, num_epochs, seed, True)
 
 
 @log(logger=logger, log_output=False)
 def validate_models(
         model_names: List[str],
         dataloaders: Dict[str, DataLoader],
+        seed: int,
         save_log: Optional[bool] = False,
         description: Optional[str] = None) -> Tuple[dict, dict, dict]:
     """Validates models. Return models and scores.
@@ -280,12 +298,13 @@ def validate_models(
     """
 
     return _run_epochs(
-        model_names, dataloaders, 1, False)
+        model_names, dataloaders, 1, seed, False)
 
 
 @log(logger=logger, log_output=False)
 def validate_model(
         dataloaders: Dict[str, DataLoader],
+        seed: int,
         model: Optional[Module] = None,
         model_name: Optional[str] = None,
         save_log: Optional[bool] = False,
@@ -310,4 +329,4 @@ def validate_model(
         model = get_model(model_name)
 
     return _run_epoch(
-        model=model, dataloaders=dataloaders, num_epochs=1, train=False)
+        model=model, dataloaders=dataloaders, num_epochs=1, seed=seed, train=False)
